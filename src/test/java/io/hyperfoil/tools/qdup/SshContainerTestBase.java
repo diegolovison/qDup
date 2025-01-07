@@ -37,21 +37,8 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.assertTrue;
 
-public class SshContainerTestBase {
+public class SshContainerTestBase extends SshTestBase {
 
-
-    protected TmpDir tmpDir;
-
-    @Before
-    public void setup(){
-        tmpDir = TmpDir.instance();
-    }
-
-    @After
-    public void cleanUp(){
-        //tmpDir.removeDir();
-        tmpDir = null;
-    }
     private static GenericContainer container;
 
     private static final ScheduledThreadPoolExecutor SCHEDULED_THREAD_POOL_EXECUTOR = new ScheduledThreadPoolExecutor(2);
@@ -59,64 +46,6 @@ public class SshContainerTestBase {
     //added to simplify exchanging files with test container that uses identity
     public Local getLocal(){
         return new Local(getBuilder().buildConfig(Parser.getInstance()));        
-    }
-    public RunConfigBuilder getBuilder(){
-        return getBuilder("qdup");
-    }
-    public RunConfigBuilder getBuilder(String name){
-        RunConfigBuilder builder = new RunConfigBuilder();
-        builder.setIdentity(getIdentity());
-
-        setIdentityFilePerms(getPath("keys"), getKeyDirPerms());
-        setIdentityFilePerms(getPath("keys/"+name), getPrivKeyPerms());
-
-        //set perms
-        return builder;
-    }
-
-    private static void setIdentityFilePerms(Path identityFilePath, Set<PosixFilePermission> perms){
-        try {
-            Files.setPosixFilePermissions(identityFilePath, perms);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static Set<PosixFilePermission> getKeyDirPerms(){
-        Set<PosixFilePermission> perms = new HashSet<>();
-        //add owners permission
-        perms.add(PosixFilePermission.OWNER_READ);
-        perms.add(PosixFilePermission.OWNER_WRITE);
-        perms.add(PosixFilePermission.OWNER_EXECUTE);
-        perms.add(PosixFilePermission.GROUP_READ);
-        perms.add(PosixFilePermission.GROUP_WRITE);
-        perms.add(PosixFilePermission.GROUP_EXECUTE);
-        perms.add(PosixFilePermission.OTHERS_READ);
-        perms.add(PosixFilePermission.OTHERS_EXECUTE);
-
-        return perms;
-    }
-
-    private static Set<PosixFilePermission> getPrivKeyPerms(){
-        Set<PosixFilePermission> perms = new HashSet<>();
-        //add owners permission
-        perms.add(PosixFilePermission.OWNER_READ);
-        perms.add(PosixFilePermission.OWNER_WRITE);
-
-        return perms;
-    }
-
-
-    public String getIdentity() {
-        return getPath("keys/qdup").toFile().getPath();
-    }
-
-    public static Path getPath(String subDir){
-        return  Paths.get(
-                SshContainerTestBase.class.getProtectionDomain().getCodeSource().getLocation().getPath()
-        ).resolve(
-                Paths.get(subDir)
-        );
     }
 
     public static void restartContainer(){
@@ -135,12 +64,8 @@ public class SshContainerTestBase {
             host.setIdentity(identity);
             host.setPassphrase(passphrase);
             hostDefinition = new HostDefinition(host.toString());
-
-
         }
     }
-
-
 
     @BeforeClass
     public static void createContainer() {
@@ -150,6 +75,7 @@ public class SshContainerTestBase {
             throw new RuntimeException(e);
         }
     }
+
     public static void setup(Path pubPath ) throws IOException {
         String pub = "";
         try {
@@ -294,51 +220,8 @@ public class SshContainerTestBase {
         Host rtrn = new Host();
         return rtrn;
     }
+
     public static Host getPasswordHost(){
         return new Host(host.getUserName(),host.getHostName(),"password",host.getPort());
-    }
-
-
-
-    public static InputStream stream(String...input){
-        return new ByteArrayInputStream(
-                String.join("\n", Arrays.asList(input)).getBytes()
-        );
-    }
-
-    protected static class TmpDir{
-        final Path tempDirWithPrefix;
-
-        private TmpDir() throws IOException {
-            tempDirWithPrefix = Files.createTempDirectory("qdup");
-        }
-
-        public static TmpDir instance(){
-            try {
-                return  new TmpDir();
-            } catch (IOException e) {
-                return null;
-            }
-        }
-
-        public Path getPath(){
-            return this.tempDirWithPrefix;
-        }
-
-        public void removeDir(){
-            try (Stream<Path> stream = Files.walk(tempDirWithPrefix)){
-                stream
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public String toString() {
-            return tempDirWithPrefix.toString();
-        }
     }
 }
