@@ -64,6 +64,7 @@ public class QuarkusGettingStartedTest extends SshTestBase {
                       then: #install quarkus by following: https://quarkus.io/get-started/
                       - sh: "curl -Ls https://sh.jbang.dev | bash -s - trust add https://repo1.maven.org/maven2/io/quarkus/quarkus-cli/"
                       - sh: "curl -Ls https://sh.jbang.dev | bash -s - app install --fresh --force quarkus@quarkusio"
+                      - sh: "source ~/.bashrc" # jbang change your environment if you don't have jbang in the PATH
                   getting-started:
                   - sh: cd /tmp/
                   - sh: "[[ ! -d quarkus-quickstarts ]] && git clone https://github.com/quarkusio/quarkus-quickstarts.git" # prevent cloning again
@@ -82,6 +83,37 @@ public class QuarkusGettingStartedTest extends SshTestBase {
                 states:
                   HOST: LOCAL
                 """
+        )));
+        RunConfig config = builder.buildConfig(parser);
+        String message = "runConfig errors:\n" + config.getErrorStrings().stream().collect(Collectors.joining("\n"));
+        assertFalse(message, config.hasErrors());
+
+        Dispatcher dispatcher = new Dispatcher();
+        Run doit = new Run(tmpDir.toString(), config, dispatcher);
+        doit.run();
+        assertTrue(doit.getStage().equals(Stage.Done));
+    }
+
+    @Test
+    public void testStep3() {
+        Parser parser = Parser.getInstance();
+        RunConfigBuilder builder = getBuilder();
+        builder.loadYaml(parser.loadFile("signal",stream(
+                """
+                    scripts:
+                      test-source:
+                      - sh: source ~/.bashrc
+                    hosts:
+                      test: ${{HOST}}
+                    roles:
+                      run-example:
+                        hosts:
+                        - test
+                        run-scripts:
+                        - test-source
+                    states:
+                      HOST: LOCAL
+                    """
         )));
         RunConfig config = builder.buildConfig(parser);
         String message = "runConfig errors:\n" + config.getErrorStrings().stream().collect(Collectors.joining("\n"));
