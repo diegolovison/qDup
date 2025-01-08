@@ -225,7 +225,11 @@ public class Run implements Runnable, DispatchObserver {
                         .build();
                     logAppender.start();
                     ctx.updateLoggers();
-                    config.getLoggers().get(loggerName).addAppender(logAppender, Level.ALL,null);
+                    config.getLoggers().get(loggerName).addAppender(logAppender, Level.TRACE,null);
+                    for (LoggerConfig logConfig : config.getLoggers().values()) {
+                        logConfig.setLevel(Level.TRACE);
+                    }
+
                     ctx.updateLoggers();
                 }
             }
