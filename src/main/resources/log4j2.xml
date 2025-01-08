@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
     <Appenders>
-        <File name="file" fileName="/tmp/qdup.log">
-            <PatternLayout>
-<!--                <Pattern>%d %p %c{1.} %m %ex%n</Pattern>-->
-                <Pattern>%d %m %ex%n</Pattern>
-            </PatternLayout>
+        <File name="FILE" fileName="/tmp/qdup.log" append="false">
+            <PatternLayout pattern="%d{HH:mm:ss} [%t] %-5p %C:%L - %m%n" />
         </File>
         <Console name="STDOUT" target="SYSTEM_OUT" follow="true">
-            <PatternLayout disableAnsi="false" pattern="%highlight{%d{HH:mm:ss.SSS} %m%n}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=white, DEBUG=green bold, TRACE=blue}"/>
+            <PatternLayout disableAnsi="false" pattern="%d{HH:mm:ss} [%t] %-5p %C:%L - %m%n"/>
         </Console>
     </Appenders>
     <Loggers>
@@ -16,7 +13,7 @@
 <!--            <AppenderRef ref="STDOUT"/>-->
         </Logger>
         <Root level="INFO">
-            <AppenderRef ref="file" level="INFO"/>
+            <AppenderRef ref="FILE" level="INFO"/>
             <AppenderRef ref="STDOUT" level="INFO"/>
         </Root>
     </Loggers>
