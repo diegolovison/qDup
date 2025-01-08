@@ -300,6 +300,8 @@ public class ScriptContext implements Context, Runnable{
         String filteredMessage = state.getSecretFilter().filter(message);
         getRunLogger().info("{}:{}@{}: {}",rootString,rootCmd.getUid(),getHost().getShortHostName(),filteredMessage);
     }
+
+    @Override
     public void error(String message){
         String rootString;
         if(rootCmd instanceof Script){

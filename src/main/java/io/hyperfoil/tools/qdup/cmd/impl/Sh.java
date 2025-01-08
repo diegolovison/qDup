@@ -160,7 +160,7 @@ public class Sh extends Cmd {
                     if ("0".equals(response)) {
                         context.log(toLog);
                     } else {
-                        context.error(toLog);
+                        context.error("(exit_code=" + response + "): " + toLog);
                     }
                 }
             }
