@@ -63,11 +63,6 @@ public class QuarkusGettingStartedTest extends SshTestBase {
         builder.loadYaml(parser.loadFile("signal",stream(
             """
                 scripts:
-                  test-endpoint:
-                  - wait-for: ready
-                    then:
-                    - sh: curl localhost:8080/hello
-                    - signal: done #tells qDup that the "testing" is done
                   ensure-quarkus-cli:
                   - sh: quarkus version #to see if the command exists
                     then:
@@ -87,12 +82,9 @@ public class QuarkusGettingStartedTest extends SshTestBase {
                       prompt:
                         "Press [space] to restart, [e] to edit command line args (currently ''), [r] to resume testing, [o] Toggle test output, [:] for the terminal, [h] for more options>": "r"
                     watch:
-                    - regex: "Tests paused"
-                      then:
-                      - signal: ready
-                    on-signal:
-                      done:
-                      - ctrlC #exits the process
+                      - regex: "Tests paused"
+                        then:
+                        - signal: ready
                 hosts:
                   test: ${{HOST}}
                 roles:
@@ -101,7 +93,6 @@ public class QuarkusGettingStartedTest extends SshTestBase {
                     - test
                     run-scripts:
                     - getting-started
-                    - test-endpoint
                 states:
                   HOST: LOCAL
                 """
@@ -177,9 +168,9 @@ public class QuarkusGettingStartedTest extends SshTestBase {
                       - sh:
                           command: quarkus dev
                           prompt:
-                            "Press [space] to restart, [e] to edit command line args (currently ''), [r] to resume testing, [o] Toggle test output, [:] for the terminal, [h] for more options>": "r"
+                            "Press [e] to edit command line args (currently ''), [r] to resume testing, [o] Toggle test output, [:] for the terminal, [h] for more options>": "r"
                         watch:
-                        - regex: "Tests paused"
+                        - regex: "Tests completed"
                           then:
                           - signal: ready
                         on-signal:
@@ -194,6 +185,42 @@ public class QuarkusGettingStartedTest extends SshTestBase {
                         run-scripts:
                         - getting-started
                         - test-endpoint
+                    states:
+                      HOST: LOCAL
+                    """
+        )));
+        RunConfig config = builder.buildConfig(parser);
+        String message = "runConfig errors:\n" + config.getErrorStrings().stream().collect(Collectors.joining("\n"));
+        assertFalse(message, config.hasErrors());
+
+        Dispatcher dispatcher = new Dispatcher();
+        logger.info("storing artifacts at: {}", tmpDir.toString());
+        Run doit = new Run(tmpDir.toString(), config, dispatcher);
+        doit.run();
+        assertTrue(doit.getStage().equals(Stage.Done));
+    }
+
+    @Test
+    public void testStep5() {
+        Parser parser = Parser.getInstance();
+        RunConfigBuilder builder = getBuilder();
+        builder.loadYaml(parser.loadFile("signal",stream(
+                """
+                    scripts:
+                      getting-started:
+                      - sh:
+                          command: sh /home/dlovison/diego-kitchen/qDup-examples/read_input.sh
+                          prompt:
+                            "Enter fullname: ": "diego lovison"
+                            "Enter user: ": "dlovison"
+                    hosts:
+                      test: ${{HOST}}
+                    roles:
+                      setup-env:
+                        hosts:
+                        - test
+                        run-scripts:
+                        - getting-started
                     states:
                       HOST: LOCAL
                     """

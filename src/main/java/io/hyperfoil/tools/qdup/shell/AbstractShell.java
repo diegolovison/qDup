@@ -377,6 +377,7 @@ public abstract class AbstractShell {
             sessionStreams.clearInline();
             if (prompt != null && !prompt.isEmpty()) {
                 sessionStreams.addInlinePrompts(prompt.keySet(), (name) -> {
+                    logger.trace("Received prompt message: {}", name);
                     if (prompt.containsKey(name)) {
                         String response = prompt.get(name);
                         if(response.startsWith("^") && response.length()==2){
